@@ -10,9 +10,9 @@ world_path="server/world"
 ## 备份文件夹路径
 backup_path="backup"
 ## 备份间隔
-backup_interval_seconds=5
+backup_interval_seconds=600
 ## 备份最多保存的数量
-backup_numbers=5
+backup_numbers=10
 
 # 格式化时间
 def get_format_time(time_stamp):
