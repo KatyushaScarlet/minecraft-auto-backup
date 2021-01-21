@@ -28,40 +28,37 @@ def check_dir(path):
 if __name__ == '__main__':
 
     last_time = 0
-    this_time = 0
 
     queue = Queue(maxsize=backup_numbers + 1)
 
     while True:
-        # 更新当前事件
-        this_time = int(time.time())
+        # 更新最近一次备份时间
+        last_time = int(time.time())
 
-        # 检查时间
-        if (this_time - last_time) > backup_interval_seconds :
-            # 更新最近一次备份时间
-            last_time = int(time.time())
+        # 创建新的备份文件夹，如果存在则删除
+        format_time = get_format_time(last_time)
+        backup_dir_name = str(backup_path) + "/" + str(format_time)
+        check_dir(backup_dir_name)
+        # os.mkdir(backup_dir_name)
 
-            # 创建新的备份文件夹，如果存在则删除
-            format_time = get_format_time(last_time)
-            backup_dir_name = str(backup_path) + "/" + str(format_time)
-            check_dir(backup_dir_name)
-            # os.mkdir(backup_dir_name)
+        # 复制文件到备份文件夹
+        print("[%s][INFO]Backup start" % get_format_time(int(time.time())))
+        shutil.copytree(world_path,backup_dir_name)
+        print("[%s][INFO]Backup finish" % get_format_time(int(time.time())))
 
-            # 复制文件到备份文件夹
-            print("[%s][INFO]Backup start" % get_format_time(int(time.time())))
-            shutil.copytree(world_path,backup_dir_name)
-            print("[%s][INFO]Backup finish" % get_format_time(int(time.time())))
+        # 往队列中加入时间戳
+        queue.put(last_time)
 
-            # 往队列中加入时间戳
-            queue.put(last_time)
+        if queue.full():
+            # 获取队列中最久的时间戳
+            time_stamp_remove = queue.get()
+            print("[%s][INFO]Remove backup: %s" % (get_format_time(int(time.time())),get_format_time(time_stamp_remove)) ) 
 
-            if queue.full():
-                # 获取队列中最久的时间戳
-                time_stamp_remove = queue.get()
-                print("[%s][INFO]Remove backup: %s" % (get_format_time(int(time.time())),get_format_time(time_stamp_remove)) ) 
+            # 根据时间戳删除最久的备份文件夹
+            path = str(backup_path) + "/" + str(get_format_time(time_stamp_remove))
 
-                # 根据时间戳删除最久的备份文件夹
-                path = str(backup_path) + "/" + str(get_format_time(time_stamp_remove))
+            # 删除备份文件夹
+            shutil.rmtree(path)
 
-                # 删除备份文件夹
-                shutil.rmtree(path)
+        # 等待下一次备份
+        time.sleep(backup_interval_seconds)
